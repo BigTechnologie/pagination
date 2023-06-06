@@ -1,15 +1,17 @@
 <?php
+
 namespace App;
 
 use \PDO;
 
-class PaginatedQuery {
+class PaginatedQuery
+{
 
     private $query;
     private $queryCount;
-    private $pdo; 
+    private $pdo;
     private $perPage;
-    private $count; 
+    private $count;
     private $items;
 
     public function __construct(
@@ -17,15 +19,14 @@ class PaginatedQuery {
         string $queryCount,
         ?\PDO $pdo = null,
         int $perPage = 12
-    )
-    {
+    ) {
         $this->query = $query;
         $this->queryCount = $queryCount;
-        $this->pdo = $pdo ?: Connection::getPDO();
-        $this->perPage = $perPage;        
+        $this->pdo = $pdo ?: Connection::getPDO(); // si pdo n'est pas defini, je vais pouvoir utiliser la class connection et utiliser la methode getPDO()
+        $this->perPage = $perPage; // permet d'initialiser le nombre d'element par page
     }
 
-    public function getItems(string $classMapping): array 
+    public function getItems(string $classMapping): array
     {
         if ($this->items === null) {
             $currentPage = $this->getCurrentPage();
@@ -35,8 +36,9 @@ class PaginatedQuery {
             }
             $offset = $this->perPage * ($currentPage - 1);
             $this->items = $this->pdo->query(
-                $this->query . 
-                " LIMIT {$this->perPage} OFFSET $offset")
+                $this->query .
+                    " LIMIT {$this->perPage} OFFSET $offset"
+            )
                 ->fetchAll(PDO::FETCH_CLASS, $classMapping);
         }
         return $this->items;
@@ -65,18 +67,17 @@ HTML;
 
     private function getCurrentPage(): int
     {
-        return URL::getPositiveInt('page', 1);
+        return URL::getPositiveInt('page', 1); // Demande de recuperer un entier positif dans l'url.'page': et c'est l'ntier qui correspond  à la page
     }
 
-    private function getPages (): int 
+    private function getPages(): int
     {
         if ($this->count === null) {
             $this->count = (int)$this->pdo
                 ->query($this->queryCount)
                 ->fetch(PDO::FETCH_NUM)[0];
         }
-        
+
         return ceil($this->count / $this->perPage);
     }
-
 }
